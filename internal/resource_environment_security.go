@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	_ resource.ResourceWithConfigure = &EnvironmentSecurityResource{}
+	_ resource.ResourceWithConfigure = (*EnvironmentSecurityResource)(nil)
 )
 
 type EnvironmentSecurityResource struct {
@@ -46,6 +46,9 @@ func (r *EnvironmentSecurityResource) Configure(_ context.Context, req resource.
 
 func (r *EnvironmentSecurityResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: environmentSecurityMarkdowDescription,
+		Description:         environmentSecurityDescription,
+		Version:             1,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -54,10 +57,12 @@ func (r *EnvironmentSecurityResource) Schema(_ context.Context, req resource.Sch
 			"member_id": schema.StringAttribute{
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Required:      true,
+				Description:   "Member id of the user or group to add to the environment security.",
 			},
 			"environment_id": schema.StringAttribute{
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				Required:      true,
+				Description:   "Environment id to add the user or group to.",
 			},
 			"role_name": schema.StringAttribute{
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
@@ -65,6 +70,7 @@ func (r *EnvironmentSecurityResource) Schema(_ context.Context, req resource.Sch
 				Validators: []validator.String{
 					stringvalidator.OneOf("Administrator", "User", "Reader"),
 				},
+				Description: "Role name of the user or group to add to the environment security (one of: 'Administrator', 'User', 'Reader').",
 			},
 		},
 	}

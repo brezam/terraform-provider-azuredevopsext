@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	_ provider.Provider = &azureDevopsExtProvider{}
+	_ provider.Provider = (*azureDevopsExtProvider)(nil)
 )
 
 func NewProvider() provider.Provider {
@@ -45,16 +45,21 @@ func (p *azureDevopsExtProvider) Metadata(ctx context.Context, _ provider.Metada
 // Schema defines the provider-level schema for configuration data.
 func (p *azureDevopsExtProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: providerMarkDownDescription,
+		Description:         providerDescription,
 		Attributes: map[string]schema.Attribute{
 			"personal_access_token": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Azure Devops Personal Access Token.",
 			},
 			"org_service_url": schema.StringAttribute{
-				Optional: true,
+				Optional:    true,
+				Description: "Azure Devops Organization Service Url.",
 			},
 			"project_id": schema.StringAttribute{
-				Optional: true,
+				Optional:    true,
+				Description: "Azure Devops Project Id.",
 			},
 		},
 	}

@@ -13,7 +13,7 @@ In order for the provider to be configured you need to pass the same configurati
 You can configure it like this:
 ```terraform
 provider "azuredevopsext" {
-  project_id            = xxxx-xxxx-xxxx                    # or env var AZDO_PROJECT_ID
+  project_id            = "xxxx-xxxx-xxxx"                  # or env var AZDO_PROJECT_ID
   org_service_url       = "https://dev.azure.com/<example>" # or env var AZDO_ORG_SERVICE_URL
   personal_access_token = "yyyyyyyyyyyyy"                   # or env var AZDO_PERSONAL_ACCESS_TOKEN
 }
@@ -23,11 +23,27 @@ I recommend using the environment variables option.
 
 # Example
 You can check the [examples folder](examples/) for example files, but in short you use it like this:
+## azuredevopsext_environment_security_access
 ```terraform
-resource "azuredevopsext_environment_security_access" "default" {
+resource "azuredevopsext_environment_security_access" "example" {
   member_id      = # < origin id of a group or local id* of a user >
-  environment_id = # < id of an oficial azuredevops_environment.default.id. It's usually a number like 1234 >
+  environment_id = # < id of an oficial azuredevops_environment >
   role_name      = # < role: one of "Administrator", "User", "Reader" >
 }
 ```
-*: for some reason the API doesn't work with the origin id nor id of the user. You need something called local id.
+*: for some reason the API doesn't work with the 'origin id' nor 'id' of the user. You need something called 'local id'.
+
+## azuredevopsext_environment_pipeline_permission
+```terraform
+resource "azuredevopsext_environment_pipeline_permission" "example" {
+  pipeline_id    = # < id of the pipeline >
+  environment_id = # < id of an official azuredevops_environment>
+}
+```
+
+# Roadmap
+- [X] Resource: Environment security access
+- [X] Resource: Environment pipeline permission
+- [X] Allow resources to be imported
+- [ ] Create proper CHANGELOG.md
+- [ ] Tests

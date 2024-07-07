@@ -45,7 +45,6 @@ func (p *azureDevopsExtProvider) Metadata(ctx context.Context, _ provider.Metada
 // Schema defines the provider-level schema for configuration data.
 func (p *azureDevopsExtProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: providerMarkDownDescription,
 		Description:         providerDescription,
 		Attributes: map[string]schema.Attribute{
 			"personal_access_token": schema.StringAttribute{
@@ -119,7 +118,7 @@ func (p *azureDevopsExtProvider) Configure(ctx context.Context, req provider.Con
 
 	tflog.Info(ctx, "client", map[string]any{"pat": pat[:3] + "...", "orgServiceUrl": orgServiceUrl, "projectId": projectId})
 
-	client_ := client.NewClient(pat, orgServiceUrl, projectId)
+	client_ := client.New(pat, orgServiceUrl, projectId)
 	resp.DataSourceData = client_
 	resp.ResourceData = client_
 }
@@ -133,5 +132,6 @@ func (p *azureDevopsExtProvider) DataSources(_ context.Context) []func() datasou
 func (p *azureDevopsExtProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewEnvironmentSecurityResource,
+		NewEnvironmentPermissionResource,
 	}
 }

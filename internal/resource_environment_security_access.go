@@ -2,10 +2,12 @@ package internal
 
 import (
 	"context"
+	"regexp"
 	"slices"
 	"terraform-provider-azuredevopsext/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -15,7 +17,8 @@ import (
 )
 
 var (
-	_ resource.ResourceWithConfigure = (*EnvironmentSecurityResource)(nil)
+	_ resource.ResourceWithConfigure   = (*EnvironmentSecurityResource)(nil)
+	_ resource.ResourceWithImportState = (*EnvironmentSecurityResource)(nil)
 )
 
 type EnvironmentSecurityResource struct {
@@ -46,9 +49,8 @@ func (r *EnvironmentSecurityResource) Configure(_ context.Context, req resource.
 
 func (r *EnvironmentSecurityResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: environmentSecurityMarkdowDescription,
-		Description:         environmentSecurityDescription,
-		Version:             1,
+		Description: environmentSecurityDescription,
+		Version:     1,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -78,8 +80,7 @@ func (r *EnvironmentSecurityResource) Schema(_ context.Context, req resource.Sch
 
 func (r *EnvironmentSecurityResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state EnvironmentSecurityResourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -118,7 +119,7 @@ func (r *EnvironmentSecurityResource) Create(ctx context.Context, req resource.C
 		resp.Diagnostics.AddError("Failed to create environment security", err.Error())
 		return
 	}
-	plan.ID = types.StringValue(makeId(access))
+	plan.ID = types.StringValue(makeIdEnvSecurity(plan.MemberId.ValueString(), roleNameEnum))
 	plan.RoleName = types.StringValue(access.Role.Name)
 	plan.MemberId = types.StringValue(access.Identity.Id)
 	resp.State.Set(ctx, plan)
@@ -141,7 +142,21 @@ func (r *EnvironmentSecurityResource) Delete(ctx context.Context, req resource.D
 	}
 }
 
-// private
-func makeId(access *client.EnvironmentSecurityAccess) string {
-	return access.Identity.Id + "-" + access.Role.Name
+func (r *EnvironmentSecurityResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	pattern := regexp.MustCompile("^([^-]+),([^@]+)@(.+)$")
+	matches := pattern.FindStringSubmatch(req.ID)
+	if matches == nil {
+		resp.Diagnostics.AddError("Invalid import ID", "Expected format: '<member id>,<role name>@<environment id>'")
+		return
+	}
+	memberId := matches[1]
+	roleName := matches[2]
+	environmentId := matches[3]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("member_id"), memberId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_name"), roleName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), environmentId)...)
+}
+
+func makeIdEnvSecurity(memberId string, roleName client.RoleName) string {
+	return memberId + "," + string(roleName)
 }

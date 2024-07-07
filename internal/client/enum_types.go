@@ -2,6 +2,8 @@ package client
 
 import "fmt"
 
+// RoleName
+
 func MakeRoleName(s string) (RoleName, error) {
 	switch s {
 	case "Administrator":
@@ -21,4 +23,12 @@ const (
 	RoleNameAdministrator RoleName = "Administrator"
 	RoleNameReader        RoleName = "User"
 	RoleNameContributor   RoleName = "Reader"
+)
+
+// ApiVersion
+
+type APIVersion string
+
+const (
+	APIVersion7_1Preview1 APIVersion = "7.1-preview.1"
 )
